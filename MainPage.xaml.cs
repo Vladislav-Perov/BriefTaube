@@ -1,16 +1,21 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Security.Cryptography;
 
 namespace BriefTaube
 {
     public partial class MainPage : ContentPage
     {
+        //Поле для файла
         private FileResult? _selectedFile;
+
+        //Обработчик xaml
         public MainPage()
         {
             InitializeComponent();
         }
 
+       //Обработчик кнопки Выбор файла
        private async void OnPickFileClicked(object? sender, EventArgs e)
        {
             try
@@ -33,6 +38,7 @@ namespace BriefTaube
             }
        }
 
+       //Обработчик кнопки Сведений о файле
        private async void OnFileInfoCliсked(object? sender, EventArgs e)
        {
             var file = _selectedFile;
@@ -47,13 +53,19 @@ namespace BriefTaube
             {
                 using var stream = await file.OpenReadAsync();
 
-                if (stream.CanSeek)
+                //SHA-256
+                string sizeText = stream.CanSeek
+                    ? $"{stream.Length:N0} байт"
+                    : "размер неизвестен";
+
+                StatusLabel.Text = $"Вычисляю SHA-256 для {file.FileName}...";
+
+                byte[] hashBytes = await SHA256.HashDataAsync(stream);
+                string hashText = Convert.ToHexString(hashBytes);
+
+                if(file == _selectedFile)
                 {
-                    StatusLabel.Text = $"{file.FileName} - {stream.Length:N0} байт";
-                }
-                else
-                {
-                    StatusLabel.Text = $"{file.FileName} - размер неизвестен";
+                    StatusLabel.Text = $"{file.FileName} - {sizeText}\nSHA-256: {hashText}";
                 }
             }
 
