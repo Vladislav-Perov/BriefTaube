@@ -2,13 +2,8 @@
 Учебный проект для обмена файлами и ссылками между Windows и Android.
 
 ![C#, .NET MAUI, Windows и Android](docs/images/stack.svg)
-
----
 <img src="docs/images/brieftaube-windows.png" width="780" alt="Окно BriefTaube с кнопками выбора файла и просмотра сведений о нём">
-
 *Главный экран BriefTaube в Windows.*
-
----
 
 ## Возможности прототипа
 Можно выбрать файл через системное окно, посмотреть его размер и вычислить контрольную сумму SHA-256.
