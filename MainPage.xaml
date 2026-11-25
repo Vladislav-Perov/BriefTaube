@@ -5,7 +5,8 @@
     
     <VerticalStackLayout Padding="24" Spacing="12">
         <Label x:Name="StatusLabel" Text="Готов братишка" />
-        <Button Text="Проверить" Clicked="OnCheckClicked" />
+        <Button Text="Выбрать файлы" Clicked="OnPickFileClicked" />
+        <Button Text="Сведенья о файле" Clicked="OnFileInfoCliсked"/>
     </VerticalStackLayout>
     
 </ContentPage>
