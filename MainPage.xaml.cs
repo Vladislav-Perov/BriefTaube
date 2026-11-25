@@ -51,18 +51,25 @@ namespace BriefTaube
 
             try
             {
+                //Открываем файл для чтения using закроет поток при выходе из блока try
                 using var stream = await file.OpenReadAsync();
 
-                //SHA-256
+                //У некоторых потоков размер заранее неизвестен Хеш можно вычислить и в этом случае
                 string sizeText = stream.CanSeek
                     ? $"{stream.Length:N0} байт"
                     : "размер неизвестен";
 
                 StatusLabel.Text = $"Вычисляю SHA-256 для {file.FileName}...";
 
+                //SHA-256 читает файл по частям и вычисляет хеш его содержимого длиной 32 байта
+                //После передачи получатель сможет вычислить хеш своей копии и сравнить оба значения
                 byte[] hashBytes = await SHA256.HashDataAsync(stream);
+
+                // Для вывода на экран записываем каждый байт двумя шестнадцатеричными символами
+                // Например, байт со значением 255 записывается как FF. Весь хеш занимает 64 символа
                 string hashText = Convert.ToHexString(hashBytes);
 
+                //Пока шло чтение пользователь мог выбрать другой файл, показываем хеш только для текущего выбора
                 if(file == _selectedFile)
                 {
                     StatusLabel.Text = $"{file.FileName} - {sizeText}\nSHA-256: {hashText}";
