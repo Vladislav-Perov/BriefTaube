@@ -98,6 +98,8 @@ namespace BriefTaube
             {
                 //Подключение к получателю(пока данный пк)
                 using var client = new TcpClient();
+
+                //Запрос на установку TCP-соединения
                 await client.ConnectAsync("127.0.0.1", 5055);
 
                 //TCP передает байты, кодируем емя в ютф
