@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Security.Cryptography;
+using System.Net.Sockets;
+using System.Text;
 
 namespace BriefTaube
 {
@@ -29,7 +31,6 @@ namespace BriefTaube
 
                 _selectedFile = file;
                 StatusLabel.Text = $"Братиш, выбран файл: {file.FileName}";
-
             }
 
             catch (Exception ex)
@@ -79,6 +80,46 @@ namespace BriefTaube
             catch (Exception ex)
             {
                 await DisplayAlertAsync("Не удалось открыть файл", ex.Message, "ОК");
+            }
+       }
+
+       //Обрабочик кнопки отправки
+       private async void OnSendNameClicked(object? sender, EventArgs e)
+       {
+            var file = _selectedFile;
+
+            if(file is null)
+            {
+                StatusLabel.Text = "Сначала выбери файл";
+                return;
+            }
+
+            try
+            {
+                //Подключение к получателю(пока данный пк)
+                using var client = new TcpClient();
+                await client.ConnectAsync("127.0.0.1", 5055);
+
+                //TCP передает байты, кодируем емя в ютф
+                byte[] nameBytes = Encoding.UTF8.GetBytes(file.FileName);
+
+                //Получаем поток открытого соединения
+                using var stream = client.GetStream();
+
+                //Отправляем байты имени файла
+                await stream.WriteAsync(nameBytes);
+
+                StatusLabel.Text = $"Отправлено имя файла: {file.FileName}";
+            }
+
+            catch(SocketException ex)
+            {
+                await DisplayAlertAsync("Ошибка подключения", ex.Message, "OK");
+            }
+
+            catch(System.IO.IOException ex)
+            {
+                await DisplayAlertAsync("Ошибка отправки", ex.Message, "ОК");
             }
        }
     }

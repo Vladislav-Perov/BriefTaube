@@ -7,6 +7,7 @@
         <Label x:Name="StatusLabel" Text="Готов братишка" />
         <Button Text="Выбрать файлы" Clicked="OnPickFileClicked" />
         <Button Text="Сведенья о файле" Clicked="OnFileInfoCliсked"/>
+        <Button Text="Отправить имя файла" Clicked="OnSendNameClicked" />
     </VerticalStackLayout>
     
 </ContentPage>
