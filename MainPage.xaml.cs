@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Net.Sockets;
 using System.Text;
+using System.Buffers.Binary;
 
 namespace BriefTaube
 {
@@ -14,6 +15,7 @@ namespace BriefTaube
         //Обработчик xaml
         public MainPage()
         {
+            //Загрузка xaml-разметки
             InitializeComponent();
         }
 
@@ -62,6 +64,7 @@ namespace BriefTaube
 
                 StatusLabel.Text = $"Вычисляю SHA-256 для {file.FileName}...";
 
+                //! Основные действия по SHA-256
                 //SHA-256 читает файл по частям и вычисляет хеш его содержимого длиной 32 байта
                 //После передачи получатель сможет вычислить хеш своей копии и сравнить оба значения
                 byte[] hashBytes = await SHA256.HashDataAsync(stream);
@@ -79,36 +82,48 @@ namespace BriefTaube
 
             catch (Exception ex)
             {
-                await DisplayAlertAsync("Не удалось открыть файл", ex.Message, "ОК");
+                await DisplayAlertAsync("Не удалось открыть файл!", ex.Message, "ОК");
             }
        }
 
-       //Обрабочик кнопки отправки
+       //Обрабочик кнопки отправки(Пока имени файла)
        private async void OnSendNameClicked(object? sender, EventArgs e)
        {
             var file = _selectedFile;
 
             if(file is null)
             {
-                StatusLabel.Text = "Сначала выбери файл";
+                StatusLabel.Text = "Сначала выберите файл!";
                 return;
             }
 
             try
-            {
-                //Подключение к получателю(пока данный пк)
+            {   
+                //! Основные махинации с TCP:
+                //Создаем объект на стороне отправителя
                 using var client = new TcpClient();
 
-                //Запрос на установку TCP-соединения
+                //Запрос на установку TCP-соединения(ConnectAsync)
                 await client.ConnectAsync("127.0.0.1", 5055);
 
-                //TCP передает байты, кодируем емя в ютф
+                //! Перевод в байты длины и имени с последующей отправкой имени:
+                //TCP передает байты, кодируем имя в ютф
                 byte[] nameBytes = Encoding.UTF8.GetBytes(file.FileName);
 
-                //Получаем поток открытого соединения
+                //Получаем поток открытого соединения(для read и edit)
                 using var stream = client.GetStream();
 
-                //Отправляем байты имени файла
+                //Резервируем буфер под длину имени(4 байта) каб сервак знал сколько байт читать дальш
+                byte[] header = new byte[sizeof(int)];
+
+                //Записываем длинну в формате BigEndian(стандартный сетевойпорядок байтов)
+                BinaryPrimitives.WriteInt32BigEndian(header, nameBytes.Length);
+
+                //! Действия после отправки:
+                //Отправляем байты длинны имени
+                await stream.WriteAsync(header);
+
+                //Затем отправляем байты самого имени
                 await stream.WriteAsync(nameBytes);
 
                 StatusLabel.Text = $"Отправлено имя файла: {file.FileName}";
@@ -116,12 +131,12 @@ namespace BriefTaube
 
             catch(SocketException ex)
             {
-                await DisplayAlertAsync("Ошибка подключения", ex.Message, "OK");
+                await DisplayAlertAsync("Ошибка подключения!", ex.Message, "OK");
             }
 
             catch(System.IO.IOException ex)
             {
-                await DisplayAlertAsync("Ошибка отправки", ex.Message, "ОК");
+                await DisplayAlertAsync("Ошибка отправки!", ex.Message, "ОК");
             }
        }
     }
