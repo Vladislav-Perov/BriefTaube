@@ -2,8 +2,7 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
 using System.Net.Sockets;
-using System.Text;
-using System.Buffers.Binary;
+using BriefTaube.Core;
 
 namespace BriefTaube
 {
@@ -64,13 +63,13 @@ namespace BriefTaube
 
                 StatusLabel.Text = $"Вычисляю SHA-256 для {file.FileName}...";
 
-                //! Основные действия по SHA-256
+                //! Основные действия по SHA-256(На данный момент пока вычисляет хеш для ознакомнления(инфо))
                 //SHA-256 читает файл по частям и вычисляет хеш его содержимого длиной 32 байта
                 //После передачи получатель сможет вычислить хеш своей копии и сравнить оба значения
                 byte[] hashBytes = await SHA256.HashDataAsync(stream);
 
-                // Для вывода на экран записываем каждый байт двумя шестнадцатеричными символами
-                // Например, байт со значением 255 записывается как FF. Весь хеш занимает 64 символа
+                //Для вывода на экран записываем каждый байт двумя шестнадцатеричными символами
+                //Весь хеш занимает 64 символа
                 string hashText = Convert.ToHexString(hashBytes);
 
                 //Пока шло чтение пользователь мог выбрать другой файл, показываем хеш только для текущего выбора
@@ -106,25 +105,8 @@ namespace BriefTaube
                 //Запрос на установку TCP-соединения(ConnectAsync)
                 await client.ConnectAsync("127.0.0.1", 5055);
 
-                //! Перевод в байты длины и имени с последующей отправкой имени:
-                //TCP передает байты, кодируем имя в ютф
-                byte[] nameBytes = Encoding.UTF8.GetBytes(file.FileName);
-
-                //Получаем поток открытого соединения(для read и edit)
                 using var stream = client.GetStream();
-
-                //Резервируем буфер под длину имени(4 байта) каб сервак знал сколько байт читать дальш
-                byte[] header = new byte[sizeof(int)];
-
-                //Записываем длинну в формате BigEndian(стандартный сетевойпорядок байтов)
-                BinaryPrimitives.WriteInt32BigEndian(header, nameBytes.Length);
-
-                //! Действия после отправки:
-                //Отправляем байты длинны имени
-                await stream.WriteAsync(header);
-
-                //Затем отправляем байты самого имени
-                await stream.WriteAsync(nameBytes);
+                await FileNameProtocol.WriteAsync(stream, file.FileName);
 
                 StatusLabel.Text = $"Отправлено имя файла: {file.FileName}";
             }

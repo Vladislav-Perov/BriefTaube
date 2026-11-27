@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="BriefTaube.csproj" />
+  <Project Path="BriefTaube.Core/BriefTaube.Core.csproj" />
+  <Project Path="BriefTaube.Tests/BriefTaube.Tests.csproj" />
 </Solution>
